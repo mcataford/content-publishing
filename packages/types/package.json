@@ -1,0 +1,8 @@
+{
+  "name": "@content-publishing/types",
+  "private": true,
+  "main": "src/types.ts",
+  "scripts": {
+    "build": "tsc"
+  }
+}

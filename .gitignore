@@ -1,3 +1,15 @@
+# Build artifacts
+*.html
+
+# Yarn artifacts
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
 # Logs
 logs
 *.log
