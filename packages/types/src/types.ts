@@ -3,3 +3,9 @@ export interface IPage {
     slug: string
     id: string
 }
+
+export interface IPageMetadata {
+    id: string
+    slug: string
+    tags: Array<string>
+}

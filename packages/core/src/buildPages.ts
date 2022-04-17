@@ -1,9 +1,16 @@
 import { promises as fs } from 'fs'
 
-import { Block, serializeBlock } from 'notionToHTMLSerializer'
-import { IPage } from '@content-publishing/types'
+import { IPage, IPageMetadata } from '@content-publishing/types'
 import { Client } from '@notionhq/client'
+import {
+    Block,
+    IMultiselectProperty,
+    IPageBlock,
+    IRichTextProperty,
+    serializeBlock,
+} from 'notionToHTMLSerializer'
 
+import getLogger from './logging'
 /*
  * Gathers context from the environment and prepares an authenticated
  * Notion client for reuse.
@@ -14,23 +21,24 @@ function getContext() {
     return {
         databaseId: process.env.NOTION_DATABASE_ID ?? '',
         notionClient,
+        basePath: `${process.cwd()}/site`,
+        logger: getLogger(process.stdout),
     }
 }
 
 async function preparePage(
     context: ReturnType<typeof getContext>,
-    pageId: string,
+    pageMetadata: IPageMetadata,
 ): Promise<IPage> {
-    const pageBlocks = await context.notionClient.blocks.children.list({
-        block_id: pageId,
+    const queryResponse = await context.notionClient.blocks.children.list({
+        block_id: pageMetadata.id,
     })
+    const fetchedBlocks = queryResponse.results as Array<Block>
 
     return {
-        slug: pageId, //FIXME: The slug should be passed from the DB pull.
-        id: pageId,
-        html: pageBlocks.results
-            .map((block) => serializeBlock(block as Block))
-            .join(''),
+        slug: pageMetadata.slug, //FIXME: The slug should be passed from the DB pull.
+        id: pageMetadata.id,
+        html: fetchedBlocks.map(serializeBlock).join(''),
     }
 }
 
@@ -40,34 +48,45 @@ async function preparePage(
 async function preparePages(
     context: ReturnType<typeof getContext>,
 ): Promise<Array<IPage>> {
-    const queryResult = await context.notionClient.databases.query({
+    context.logger.group('Preparing pages')
+    const queryResponse = await context.notionClient.databases.query({
         database_id: context.databaseId,
         filter: {
             property: 'Public',
-
             checkbox: {
                 equals: true,
             },
         },
-
         sorts: [
             {
                 property: 'Published on',
-
                 direction: 'ascending',
             },
         ],
     })
 
-    const pageIdsToFetch = queryResult.results.map((queryHit) => ({
-        id: queryHit.id,
-    }))
+    const fetchedBlocks = queryResponse.results as Array<IPageBlock>
+    context.logger.log(`Fetched ${fetchedBlocks.length} pages from Notion`)
+    const pagesMetadata = fetchedBlocks.map((queryResult) => {
+        const tags = queryResult.properties.Tags as IMultiselectProperty
+        const slug = queryResult.properties.Slug as IRichTextProperty
+
+        return {
+            id: queryResult.id,
+            // Assuming that tags are not annotated.
+            slug: slug.rich_text[0].text.content,
+            tags: tags.multi_select.map(
+                (tag: typeof tags['multi_select'][number]) => tag.name,
+            ),
+        }
+    })
 
     const preparedPages = await Promise.all(
-        pageIdsToFetch.map((pageMetadata) =>
-            preparePage(context, pageMetadata.id),
-        ),
+        pagesMetadata.map((pageMetadata) => preparePage(context, pageMetadata)),
     )
+
+    context.logger.log(`Processed ${preparedPages.length} pages`)
+    context.logger.groupEnd()
 
     return preparedPages
 }
@@ -82,10 +101,19 @@ async function preparePages(
  */
 ;(async () => {
     const context = getContext()
+    context.logger.group('Building site')
     const pages = await preparePages(context)
 
-    // TODO: Filenames should be based on slugs?
+    context.logger.group('Writing pages')
+
+    await fs.mkdir(context.basePath, { recursive: true })
     await Promise.all(
-        pages.map((page) => fs.writeFile(`${page.slug}.html`, page.html)),
+        pages.map((page) => {
+            const path = `${context.basePath}/${page.slug}.html`
+            fs.writeFile(path, page.html)
+            context.logger.log(`Wrote ${path}`)
+        }),
     )
+    context.logger.groupEnd()
+    context.logger.groupEnd()
 })()
