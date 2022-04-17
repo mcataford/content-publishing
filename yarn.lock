@@ -390,19 +390,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@content-publishing/blockSerializer@workspace:^, @content-publishing/blockSerializer@workspace:packages/blockSerializer":
-  version: 0.0.0-use.local
-  resolution: "@content-publishing/blockSerializer@workspace:packages/blockSerializer"
-  languageName: unknown
-  linkType: soft
-
 "@content-publishing/core@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@content-publishing/core@workspace:packages/core"
   dependencies:
-    "@content-publishing/blockSerializer": "workspace:^"
     "@content-publishing/types": "workspace:^"
     "@notionhq/client": "npm:^1.0.4"
+    notionToHTMLSerializer: "workspace:^"
   languageName: unknown
   linkType: soft
 
@@ -4072,6 +4066,12 @@ __metadata:
   checksum: 66de83885051c8a7266566cb175281ec583e3d66b5054c744b46a0eebc4eaac1e1d74c640aaf72144086a9661aa60e89ac0b5c92eb76608e5b8a5056dbcf9e27
   languageName: node
   linkType: hard
+
+"notionToHTMLSerializer@workspace:^, notionToHTMLSerializer@workspace:packages/notionToHtmlSerializer":
+  version: 0.0.0-use.local
+  resolution: "notionToHTMLSerializer@workspace:packages/notionToHtmlSerializer"
+  languageName: unknown
+  linkType: soft
 
 "npm-run-path@npm:^4.0.1":
   version: 4.0.1

@@ -5,8 +5,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@content-publishing/blockSerializer": "workspace:^",
     "@content-publishing/types": "workspace:^",
-    "@notionhq/client": "^1.0.4"
+    "@notionhq/client": "^1.0.4",
+    "notionToHTMLSerializer": "workspace:^"
   }
 }

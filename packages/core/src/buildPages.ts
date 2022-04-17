@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 
-import { serializeBlock, Block } from '@content-publishing/blockSerializer'
+import { Block, serializeBlock } from 'notionToHTMLSerializer'
 import { IPage } from '@content-publishing/types'
 import { Client } from '@notionhq/client'
 
@@ -28,7 +28,9 @@ async function preparePage(
     return {
         slug: pageId, //FIXME: The slug should be passed from the DB pull.
         id: pageId,
-        html: pageBlocks.results.map((block) => serializeBlock(block as Block)).join(''),
+        html: pageBlocks.results
+            .map((block) => serializeBlock(block as Block))
+            .join(''),
     }
 }
 
@@ -57,10 +59,14 @@ async function preparePages(
         ],
     })
 
-    const pageIdsToFetch = queryResult.results.map((queryHit) => queryHit.id)
+    const pageIdsToFetch = queryResult.results.map((queryHit) => ({
+        id: queryHit.id,
+    }))
 
     const preparedPages = await Promise.all(
-        pageIdsToFetch.map((pageId) => preparePage(context, pageId)),
+        pageIdsToFetch.map((pageMetadata) =>
+            preparePage(context, pageMetadata.id),
+        ),
     )
 
     return preparedPages

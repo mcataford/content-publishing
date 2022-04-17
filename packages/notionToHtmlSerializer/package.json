@@ -1,5 +1,5 @@
 {
-  "name": "@content-publishing/blockSerializer",
+  "name": "notionToHTMLSerializer",
   "private": true,
   "main": "dist/index.js",
   "scripts": {
