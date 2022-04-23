@@ -1,0 +1,12 @@
+{
+  "name": "@content-publishing/core",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@content-publishing/types": "workspace:^",
+    "@notionhq/client": "^1.0.4",
+    "notionToHTMLSerializer": "workspace:^"
+  }
+}
